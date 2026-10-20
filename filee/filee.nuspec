@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Version, release notes and the installer URL/checksum are updated by scripts/update.ps1. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>filee</id>
+    <version>1.12.0</version>
+    <packageSourceUrl>https://github.com/KamranBiglari/choco-filee</packageSourceUrl>
+    <owners>KamranBiglari</owners>
+    <title>Filee</title>
+    <authors>Myeonggu Kim (KnifeLemon)</authors>
+    <projectUrl>https://filee.sh</projectUrl>
+    <iconUrl>https://cdn.jsdelivr.net/gh/KamranBiglari/choco-filee@main/icons/filee.png</iconUrl>
+    <copyright>Copyright (c) Filee contributors</copyright>
+    <licenseUrl>https://github.com/KnifeLemon/Filee/blob/main/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/KnifeLemon/Filee</projectSourceUrl>
+    <docsUrl>https://filee.sh/cli/</docsUrl>
+    <bugTrackerUrl>https://github.com/KnifeLemon/Filee/issues</bugTrackerUrl>
+    <tags>filee file-converter converter drag-and-drop pdf docx hwp image video audio ebook archive foss</tags>
+    <summary>Free, open-source file converter you use by dragging. 255 formats, offline, no Office needed.</summary>
+    <description><![CDATA[Filee is a free, open-source file converter you use by dragging. Hold a key (Ctrl), drag files and drop them on a format in the donut that opens at your cursor.
+
+## Features
+
+- **Right at your cursor**: no app window to open. Only the formats that make sense for the files you drag appear.
+- **255 formats, no other software**: images, PDF, Word, Excel, PowerPoint, HWP/HWPX, e-books, archives, fonts, CAD, 3D models and geospatial data work without Office, Hancom Office or LibreOffice.
+- **Stays on your computer**: nothing is uploaded. Filee works offline and saves the result next to the original.
+- **Many files at once**, in parallel, with presets for quality, size, DPI, PDF pages, compression, video and audio.
+- **Watch folders**, the Explorer right-click menu, a keyboard shortcut, a drop zone and the `filee` command line.
+
+Optional engines (FFmpeg, LibreOffice, Ghostscript, Pandoc, calibre) are downloaded by Filee only when needed.
+
+## Package parameters
+
+By default the installer adds the File Explorer menu, starts Filee at sign-in and puts the `filee` command on PATH, as the interactive installer does.
+
+- `/NoContextMenu` - don't add Filee to the File Explorer right-click menu
+- `/NoStartup` - don't start Filee when you sign in
+- `/NoCli` - don't add the `filee` command to PATH
+- `/DesktopIcon` - add a desktop shortcut
+
+Example: `choco install filee --params "'/NoStartup /DesktopIcon'"`
+
+The menu and startup options only apply to a first install. Updates keep what you chose in Filee (Settings → General).
+
+## Notes
+
+- Windows 10 (1809) or later, 64-bit only.
+- Setup starts Filee in the notification area when it finishes.
+- Filee can also update itself. Upgrading with Chocolatey works either way.
+- Uninstalling keeps your settings in `%APPDATA%\Filee`.
+]]></description>
+    <releaseNotes>https://github.com/KnifeLemon/Filee/releases/tag/v1.12.0</releaseNotes>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

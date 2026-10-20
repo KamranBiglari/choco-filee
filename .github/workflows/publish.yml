@@ -1,0 +1,108 @@
+name: Update and publish
+
+# Checks for a new Filee release, updates the package, tests it and pushes it to the Chocolatey Community Repository.
+# Needs the repository secret CHOCO_API_KEY (https://community.chocolatey.org/account).
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Upstream Filee version (blank for the latest release)
+        required: false
+      package_version:
+        description: Package version, only for a package fix (e.g. 1.12.0.20261020)
+        required: false
+      force:
+        description: Publish even when the package version is unchanged
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Update package
+        id: update
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          PACKAGE_VERSION: ${{ inputs.package_version }}
+        run: ./scripts/update.ps1 -Version "$env:VERSION" -PackageVersion "$env:PACKAGE_VERSION"
+
+      - name: Decide
+        id: decide
+        shell: pwsh
+        env:
+          FORCE: ${{ inputs.force }}
+          PACKAGE_VERSION: ${{ steps.update.outputs.package_version }}
+        run: |
+          # Every published version gets a tag here, after its push succeeded.
+          $tagged = [bool](git ls-remote --tags origin "refs/tags/v$env:PACKAGE_VERSION")
+          $publish = -not $tagged -or $env:FORCE -eq 'true'
+          # A version that reached Chocolatey (approved or in moderation) can't be pushed again.
+          $pushed = $false
+          try {
+            Invoke-WebRequest -UseBasicParsing -Method Head "https://community.chocolatey.org/api/v2/package/filee/$env:PACKAGE_VERSION" | Out-Null
+            $pushed = $true
+          } catch {}
+          Write-Host "Package $env:PACKAGE_VERSION, tagged: $tagged, publish: $publish, already on Chocolatey: $pushed"
+          "publish=$($publish.ToString().ToLowerInvariant())" | Add-Content $env:GITHUB_OUTPUT
+          "pushed=$($pushed.ToString().ToLowerInvariant())" | Add-Content $env:GITHUB_OUTPUT
+
+      - name: Pack
+        if: steps.decide.outputs.publish == 'true'
+        shell: pwsh
+        run: choco pack filee/filee.nuspec --outputdirectory dist
+
+      - name: Install and uninstall
+        if: steps.decide.outputs.publish == 'true'
+        shell: pwsh
+        run: ./scripts/test.ps1 -Source dist
+
+      - name: Push to Chocolatey
+        if: steps.decide.outputs.publish == 'true' && steps.decide.outputs.pushed != 'true'
+        shell: pwsh
+        env:
+          CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
+          PACKAGE_VERSION: ${{ steps.update.outputs.package_version }}
+        run: |
+          if (-not $env:CHOCO_API_KEY) { throw 'The CHOCO_API_KEY secret is not set' }
+          choco push "dist/filee.$env:PACKAGE_VERSION.nupkg" --source https://push.chocolatey.org/ --api-key $env:CHOCO_API_KEY
+          if ($LASTEXITCODE -ne 0) { throw "choco push failed with exit code $LASTEXITCODE" }
+
+      - name: Commit, tag and release
+        if: steps.decide.outputs.publish == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.update.outputs.version }}
+          PACKAGE_VERSION: ${{ steps.update.outputs.package_version }}
+        run: |
+          $tag = "v$env:PACKAGE_VERSION"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add filee
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "filee $env:PACKAGE_VERSION"
+            git push
+          }
+          if (-not (git ls-remote --tags origin "refs/tags/$tag")) {
+            git tag $tag
+            git push origin $tag
+            gh release create $tag "dist/filee.$env:PACKAGE_VERSION.nupkg" --title "filee $env:PACKAGE_VERSION" `
+              --notes "Chocolatey package for [Filee $env:VERSION](https://github.com/KnifeLemon/Filee/releases/tag/v$env:VERSION)."
+          }
+          exit 0
