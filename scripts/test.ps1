@@ -49,7 +49,15 @@ if ($Headless) {
       $result = (Get-ScheduledTaskInfo -TaskName $name).LastTaskResult
     }
     if (Test-Path $log) { Get-Content $log | Write-Host }
-    if ($result -ne 0) { throw "The headless test failed ($result)" }
+    if ($result -ne 0) {
+      # A hung installer can hold the output pipe, leaving the transcript empty; Chocolatey's own log still says why.
+      $chocoLog = Join-Path $env:ChocolateyInstall 'logs\chocolatey.log'
+      if (Test-Path $chocoLog) {
+        Write-Host "`n--- end of $chocoLog ---"
+        Get-Content $chocoLog -Tail 80 | Write-Host
+      }
+      throw "The headless test failed ($result)"
+    }
     exit 0
   } finally {
     Unregister-ScheduledTask -TaskName $name -Confirm:$false
