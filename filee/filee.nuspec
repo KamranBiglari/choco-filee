@@ -38,15 +38,16 @@ By default the installer adds the File Explorer menu, starts Filee at sign-in an
 - `/NoStartup` - don't start Filee when you sign in
 - `/NoCli` - don't add the `filee` command to PATH
 - `/DesktopIcon` - add a desktop shortcut
+- `/NoLaunch` - don't start Filee when the install finishes
 
 Example: `choco install filee --params "'/NoStartup /DesktopIcon'"`
 
-The menu and startup options only apply to a first install. Updates keep what you chose in Filee (Settings → General).
+The menu and startup options only apply to a first install, and Filee picks them up when the installer starts it. With `/NoLaunch`, or without a desktop session, Filee uses its defaults (both on) when you first open it. Updates keep what you chose in Filee (Settings → General).
 
 ## Notes
 
 - Windows 10 (1809) or later, 64-bit only.
-- Setup starts Filee in the notification area when it finishes.
+- Setup starts Filee in the notification area when it finishes. Over WinRM or SSH, or as SYSTEM, there is no desktop to start it on, so it isn't started.
 - Filee can also update itself. Upgrading with Chocolatey works either way.
 - Uninstalling keeps your settings in `%APPDATA%\Filee`.
 ]]></description>

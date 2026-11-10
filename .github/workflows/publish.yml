@@ -15,7 +15,7 @@ on:
         description: Package version, only for a package fix (e.g. 1.12.0.20261020)
         required: false
       force:
-        description: Publish even when the package version is unchanged
+        description: Publish even when the version is tagged here, and push it again while Chocolatey hasn't approved it (a fixed package is tested again)
         type: boolean
         default: false
 
@@ -28,7 +28,8 @@ concurrency:
 
 jobs:
   publish:
-    runs-on: windows-latest
+    # Closest hosted image to the verifier's Windows Server 2019 (chocolatey-test-environment).
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v5
 
@@ -51,7 +52,8 @@ jobs:
           # Every published version gets a tag here, after its push succeeded.
           $tagged = [bool](git ls-remote --tags origin "refs/tags/v$env:PACKAGE_VERSION")
           $publish = -not $tagged -or $env:FORCE -eq 'true'
-          # A version that reached Chocolatey (approved or in moderation) can't be pushed again.
+          # A version that reached Chocolatey is pushed again only with force: allowed while it awaits moderation,
+          # refused once approved.
           $pushed = $false
           try {
             Invoke-WebRequest -UseBasicParsing -Method Head "https://community.chocolatey.org/api/v2/package/filee/$env:PACKAGE_VERSION" | Out-Null
@@ -66,13 +68,20 @@ jobs:
         shell: pwsh
         run: choco pack filee/filee.nuspec --outputdirectory dist
 
-      - name: Install and uninstall
+      - name: Install and uninstall (desktop)
         if: steps.decide.outputs.publish == 'true'
         shell: pwsh
         run: ./scripts/test.ps1 -Source dist
 
+      # As SYSTEM without a desktop shell, the way Chocolatey's verifier runs it: an install that only works with a
+      # signed-in user is caught here instead of failing verification 45 minutes after the push.
+      - name: Install and uninstall (headless)
+        if: steps.decide.outputs.publish == 'true'
+        shell: pwsh
+        run: ./scripts/test.ps1 -Source dist -Headless
+
       - name: Push to Chocolatey
-        if: steps.decide.outputs.publish == 'true' && steps.decide.outputs.pushed != 'true'
+        if: steps.decide.outputs.publish == 'true' && (steps.decide.outputs.pushed != 'true' || inputs.force)
         shell: pwsh
         env:
           CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
@@ -104,5 +113,8 @@ jobs:
             git push origin $tag
             gh release create $tag "dist/filee.$env:PACKAGE_VERSION.nupkg" --title "filee $env:PACKAGE_VERSION" `
               --notes "Chocolatey package for [Filee $env:VERSION](https://github.com/KnifeLemon/Filee/releases/tag/v$env:VERSION)."
+          } else {
+            # Pushed again with force: the release gets the package that was pushed.
+            gh release upload $tag "dist/filee.$env:PACKAGE_VERSION.nupkg" --clobber
           }
           exit 0
