@@ -4,13 +4,22 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   test:
-    runs-on: windows-latest
+    name: test (${{ matrix.session }})
+    # Closest hosted image to the verifier's Windows Server 2019 (chocolatey-test-environment).
+    runs-on: windows-2022
+    strategy:
+      fail-fast: false
+      matrix:
+        # desktop: an interactive install. headless: as SYSTEM without a desktop shell, the way Chocolatey's
+        # verifier (over WinRM) and remote deployments run it.
+        session: [desktop, headless]
     steps:
       - uses: actions/checkout@v5
 
@@ -20,9 +29,10 @@ jobs:
 
       - name: Install and uninstall
         shell: pwsh
-        run: ./scripts/test.ps1 -Source dist
+        run: ./scripts/test.ps1 -Source dist -Headless:$${{ matrix.session == 'headless' }}
 
       - uses: actions/upload-artifact@v4
+        if: matrix.session == 'desktop'
         with:
           name: nupkg
           path: dist/*.nupkg

@@ -47,18 +47,22 @@ desktop shortcut, with package parameters:
 | `/NoStartup`     | Don't start Filee when you sign in                    |
 | `/NoCli`         | Don't add the `filee` command to PATH                 |
 | `/DesktopIcon`   | Add a desktop shortcut                                |
+| `/NoLaunch`      | Don't start Filee when the install finishes           |
 
 ```powershell
 choco install filee --params "'/NoStartup /DesktopIcon'"
 ```
 
-The right-click menu and sign-in options apply to a first install. After that, change them in Filee under
-Settings → General; upgrades keep what you chose.
+The right-click menu and sign-in options apply to a first install, and Filee picks them up when the installer starts
+it. With `/NoLaunch`, or without a desktop session, Filee isn't started and uses its defaults (both on) when you first
+open it. After that, change them in Filee under Settings → General; upgrades keep what you chose.
 
 ## Good to know
 
 - **Filee starts after installing.** Look for it in the notification area of the taskbar. On a first install it also
   downloads the conversion engines its installer suggests by default. Manage engines in Settings → Engines.
+- **Remote and unattended installs work.** Over WinRM or SSH, or as SYSTEM from a deployment tool, there's no
+  desktop for Filee to start on, so the package installs it without starting it.
 - **Filee updates itself too.** Both ways of updating work: Filee's own updater and `choco upgrade filee`. If Filee has
   already updated itself, Chocolatey may list an older version than the one you're running.
 - **Uninstalling keeps your settings** in `%APPDATA%\Filee`, so reinstalling picks up where you left off. Delete
