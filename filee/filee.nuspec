@@ -3,7 +3,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>filee</id>
-    <version>2.4.0</version>
+    <version>2.4.1</version>
     <packageSourceUrl>https://github.com/KamranBiglari/choco-filee</packageSourceUrl>
     <owners>KamranBiglari</owners>
     <title>Filee</title>
@@ -51,7 +51,7 @@ The menu and startup options only apply to a first install, and Filee picks them
 - Filee can also update itself. Upgrading with Chocolatey works either way.
 - Uninstalling keeps your settings in `%APPDATA%\Filee`.
 ]]></description>
-    <releaseNotes>https://github.com/KnifeLemon/Filee/releases/tag/v2.4.0</releaseNotes>
+    <releaseNotes>https://github.com/KnifeLemon/Filee/releases/tag/v2.4.1</releaseNotes>
   </metadata>
   <files>
     <file src="tools\**" target="tools" />

@@ -2,8 +2,8 @@ $ErrorActionPreference = 'Stop'
 
 # Filee's own Setup (src/Filee.Setup upstream, since 2.0), x64 only, installed for all users. It takes the switches
 # of the Inno Setup installer it replaced.
-$url64      = 'https://github.com/KnifeLemon/Filee/releases/download/v2.4.0/Filee-2.4.0-win-Setup.exe'
-$checksum64 = '8f8decc2ce6fb9b4415e64ea47a7bea8447abbd33b873dc8353a63c1ecba40e5'
+$url64      = 'https://github.com/KnifeLemon/Filee/releases/download/v2.4.1/Filee-2.4.1-win-Setup.exe'
+$checksum64 = 'abda38bb9c5b00af242ed033e8a47045ede6d8722318126c26abb63c797a97a8'
 
 $pp = Get-PackageParameters
 
